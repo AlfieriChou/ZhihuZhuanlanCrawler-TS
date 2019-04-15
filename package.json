@@ -2,9 +2,13 @@
   "name": "zhihu-zhuanlan-crawler",
   "version": "1.0.0",
   "main": "index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "author": "solarhell",
   "license": "MIT",
   "dependencies": {
+    "typescript": "^3.4.3",
     "urllib": "^2.33.3"
   },
   "devDependencies": {

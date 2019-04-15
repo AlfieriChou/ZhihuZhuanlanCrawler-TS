@@ -37,94 +37,89 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var client_1 = require("./client");
-function GetPinnedArticlePidAndAuthor(columnName) {
-    return __awaiter(this, void 0, void 0, function () {
-        var url;
-        return __generator(this, function (_a) {
-            if (columnName === "") {
-                throw new Error('专栏名不能为空');
-            }
-            url = "https://zhuanlan.zhihu.com/api/columns/" + columnName + "/pinned-article";
-            client_1.SendNewZhihuRequest(url)
-                .then(function (res) {
-                var ret = {
-                    'type': res.data.type,
-                    'id': res.data.id,
-                    'updated': res.data.updated,
-                    'created': res.data.created,
-                    'title': res.data.title,
-                    'image_url': res.data.image_url,
-                    'url': res.data.url,
-                    'excerpt': res.data.excerpt,
-                    'author': res.data.author,
-                };
-                console.log(ret);
-                return ret;
-            })
-                .catch(function (err) {
-                throw err;
-            });
-            return [2 /*return*/];
-        });
-    });
-}
+// async function GetPinnedArticlePidAndAuthor(columnName: string) {
+//     if (columnName === "") {
+//         throw new Error('专栏名不能为空')
+//     }
+//     const url = `https://zhuanlan.zhihu.com/api/columns/${columnName}/pinned-article`;
+//     SendNewZhihuRequest(url)
+//         .then(res => {
+//             const ret = {
+//                 'type': res.data.type,
+//                 'id': res.data.id,
+//                 'updated': res.data.updated,
+//                 'created': res.data.created,
+//                 'title': res.data.title,
+//                 'image_url': res.data.image_url,
+//                 'url': res.data.url,
+//                 'excerpt': res.data.excerpt,
+//                 'author': res.data.author,
+//             };
+//             console.log(ret);
+//             return ret
+//         })
+//         .catch(err => {
+//             throw err
+//         })
+// }
 function _getArticleListPidsByLimitAndOffset(columnName, limit, offset) {
     return __awaiter(this, void 0, void 0, function () {
-        var url;
+        var url, response, data, articleIds, i;
         return __generator(this, function (_a) {
-            if (columnName === "") {
-                throw new Error('专栏名不能为空');
+            switch (_a.label) {
+                case 0:
+                    if (columnName === "") {
+                        throw new Error('专栏名不能为空');
+                    }
+                    url = "https://zhuanlan.zhihu.com/api/columns/" + columnName + "/articles?limit=" + limit + "&offset=" + offset;
+                    return [4 /*yield*/, client_1.SendNewZhihuRequest(url)];
+                case 1:
+                    response = _a.sent();
+                    data = response.data;
+                    articleIds = new Set();
+                    for (i = void 0; i < data.length; ++i) {
+                        articleIds.add(data[i].id);
+                    }
+                    return [2 /*return*/, articleIds];
             }
-            url = "https://zhuanlan.zhihu.com/api/columns/" + columnName + "/articles?limit=" + limit + "&offset=" + offset;
-            console.log(url);
-            return [2 /*return*/, client_1.SendNewZhihuRequest(url)
-                    .then(function (res) {
-                    var articleIds = new Set();
-                    res.data.data.forEach(function (ele) {
-                        articleIds.add(ele.id);
-                    });
-                    console.log('articleIds', articleIds);
-                    return Promise.resolve(articleIds);
-                })
-                    .catch(function (err) {
-                    return Promise.reject(err);
-                })];
         });
     });
 }
 function GetArticlesListPids(columnName) {
     return __awaiter(this, void 0, void 0, function () {
-        var limit, offset, url;
+        var limit, offset, url, response, data, articleIds, i, tasks, task;
         return __generator(this, function (_a) {
-            if (columnName === "") {
-                throw new Error('专栏名不能为空');
+            switch (_a.label) {
+                case 0:
+                    if (columnName === "") {
+                        throw new Error('专栏名不能为空');
+                    }
+                    limit = 20;
+                    offset = 0;
+                    url = "https://zhuanlan.zhihu.com/api/columns/" + columnName + "/articles?limit=" + limit + "&offset=" + offset;
+                    return [4 /*yield*/, client_1.SendNewZhihuRequest(url)];
+                case 1:
+                    response = _a.sent();
+                    data = response.data;
+                    articleIds = new Set();
+                    for (i = 0; i < data.length; ++i) {
+                        articleIds.add(data[i].id);
+                    }
+                    tasks = [];
+                    for (offset = offset + limit; offset < data.paging.totals; offset += limit) {
+                        task = _getArticleListPidsByLimitAndOffset(columnName, limit, offset);
+                        tasks.push(task);
+                    }
+                    Promise.all(tasks)
+                        .then(function (res) {
+                        var merged = new Set(res.slice());
+                        console.log('----->', merged);
+                    })
+                        .catch(function (err) {
+                        throw err;
+                    });
+                    return [2 /*return*/];
             }
-            limit = 20;
-            offset = 0;
-            url = "https://zhuanlan.zhihu.com/api/columns/" + columnName + "/articles?limit=" + limit + "&offset=" + offset;
-            client_1.SendNewZhihuRequest(url)
-                .then(function (res) {
-                var articleIds = new Set();
-                res.data.data.forEach(function (ele) {
-                    articleIds.add(ele.id);
-                });
-                var tasks = [];
-                for (offset = offset + limit; offset < res.data.paging.totals; offset += limit) {
-                    var task = _getArticleListPidsByLimitAndOffset(columnName, limit, offset);
-                    tasks.push(task);
-                }
-                Promise.all(tasks)
-                    .then(function (res) {
-                    console.log('res', res);
-                })
-                    .catch(function (err) {
-                    throw err;
-                });
-            })
-                .catch(function (err) {
-                throw err;
-            });
-            return [2 /*return*/];
         });
     });
 }
